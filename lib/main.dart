@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,6 +13,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Flutter Wallet App',
       theme: ThemeData(
         primarySwatch: Colors.teal,
@@ -22,8 +24,16 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class WalletHome extends StatelessWidget {
+class WalletHome extends StatefulWidget {
   WalletHome({super.key});
+
+  @override
+  State<WalletHome> createState() => _WalletHomeState();
+}
+
+class _WalletHomeState extends State<WalletHome> {
+
+  int activeIndex = 0;
 
   final List<Map<String, String>> cards = [
     {
@@ -130,8 +140,24 @@ class WalletHome extends StatelessWidget {
                 height: 200,
                 enlargeCenterPage: true,
                 enableInfiniteScroll: false,
-                viewportFraction:
-                    0.9, // Slightly larger to ensure the width is noticeable
+                viewportFraction: 0.9, // Slightly larger to ensure the width is noticeable
+                onPageChanged: (index, reason) {
+                  setState(() {
+                    activeIndex = index;
+                  });
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+            Center(
+              child: AnimatedSmoothIndicator(
+                activeIndex: activeIndex,
+                count: cards.length,
+                effect: const ExpandingDotsEffect(
+                  dotHeight: 8,
+                  dotWidth: 8,
+                  activeDotColor: Colors.black54,
+                ),
               ),
             ),
             const SizedBox(height: 40),
