@@ -95,13 +95,12 @@ class WalletHome extends StatelessWidget {
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        const SizedBox(height: 20),
                         const Text(
                           'Balance',
                           style: TextStyle(color: Colors.white),
                         ),
-                        const SizedBox(height: 10),
                         Text(
                           card['balance']!,
                           style: const TextStyle(
@@ -110,7 +109,6 @@ class WalletHome extends StatelessWidget {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 10),
                         Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -163,7 +161,7 @@ class WalletHome extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 40),
             ListTile(
               leading:
                   const Icon(Icons.bar_chart, color: Colors.orange, size: 40),
