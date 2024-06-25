@@ -12,13 +12,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      key: const Key('myApp'), // Key for testing.
       debugShowCheckedModeBanner: false,
       title: 'Flutter Wallet App',
       theme: ThemeData(
         primarySwatch: Colors.teal,
-        textTheme: GoogleFonts.poppinsTextTheme(),
+        textTheme: GoogleFonts.poppinsTextTheme(), // Use Google Fonts for text theme.
       ),
-      home: const WalletHome(),
+      home: const WalletHome(), // Set WalletHome as the initial screen.
     );
   }
 }
