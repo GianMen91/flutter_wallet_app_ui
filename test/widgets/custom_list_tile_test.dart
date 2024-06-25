@@ -11,14 +11,12 @@ void main() {
           body: ListView(
             children: const [
               CustomListTile(
-                key: Key('customListTile_Statistics'), // Key for testing.
                 icon: Icons.bar_chart,
                 iconColor: Colors.orange,
                 title: 'Statistics',
                 subtitle: 'Payment and Income',
               ),
               CustomListTile(
-                key: Key('customListTile_Transactions'), // Key for testing.
                 icon: Icons.history,
                 iconColor: Colors.green,
                 title: 'Transactions',
