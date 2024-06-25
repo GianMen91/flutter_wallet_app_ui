@@ -44,7 +44,7 @@ void main() {
     });
 
     test('toString should return correct string representation', () {
-      final stringRepresentation = 'CardModel(balance: $testBalance, number: $testNumber, expiry: $testExpiry, color: $testColor)';
+      const stringRepresentation = 'CardModel(balance: $testBalance, number: $testNumber, expiry: $testExpiry, color: $testColor)';
       expect(card.toString(), stringRepresentation);
     });
 
