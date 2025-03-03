@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Define source and destination directories
+SOURCE_DIR="lib"  # The source directory in the root folder
+DEST_DIR="widgetbook/lib"  # The destination directory for Widgetbook stories
+
 # Step 1: Create a new Flutter project for Widgetbook
 echo "Creating a new Flutter project for Widgetbook..."
 flutter create widgetbook --empty
@@ -24,11 +28,11 @@ cd widgetbook
 flutter pub add widgetbook flutter_screenutil widgetbook_annotation dev:widgetbook_generator dev:build_runner
 
 # Add the app dependency to the dependencies section using awk
-# Ensure the app name is correctly inserted into the dependencies section in widgetbook/pubspec.yaml
 awk "/dependencies:/ {print; print \"  $APP_NAME:\n    path: ../\"; next}1" pubspec.yaml > temp.yaml && mv temp.yaml pubspec.yaml
 
 # Step 5: Create the main.dart file for the Widgetbook app with the updated structure
 echo "Creating main.dart in widgetbook/lib..."
+mkdir -p lib
 cat <<EOL > lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -52,18 +56,6 @@ class WidgetbookApp extends StatelessWidget {
     return Widgetbook.material(
       directories: directories,
       addons: [
-        /* MaterialThemeAddon(
-          themes: [
-            WidgetbookTheme(
-                name: 'Light',
-                data: yourCustomLightTheme
-            ),
-            WidgetbookTheme(
-                name: 'Dark',
-                data: yourCustomTheme
-            ),
-          ],
-        ),*/
         TextScaleAddon(
           min: 1.0,
           max: 2.0,
@@ -116,8 +108,100 @@ class WidgetbookApp extends StatelessWidget {
 }
 EOL
 
-# Step 6: Run build_runner to generate main.directories.g.dart
+# Step 6: Create src directory for stories
+mkdir -p lib/src
+
+# Step 7: Generate stories for widgets
+echo "Generating Widgetbook stories for relevant widgets..."
+
+# Function to check if the file contains a widget class that extends StatelessWidget or StatefulWidget
+is_widget_file() {
+    local file=$1
+    if grep -qE "class [A-Za-z0-9_]+ extends (Stateless|Stateful)Widget" "$file"; then
+        return 0 # True: It's a widget
+    else
+        return 1 # False: It's not a widget
+    fi
+}
+
+# Extract widget class name
+extract_widget_name() {
+    local file=$1
+    # Extract class name that extends StatelessWidget or StatefulWidget
+    grep -m 1 -E "class [A-Za-z0-9_]+ extends (Stateless|Stateful)Widget" "$file" | sed -E 's/class ([A-Za-z0-9_]+) extends.*/\1/'
+}
+
+# Return to the root directory
+cd ..
+
+# Check if source directory exists
+if [ ! -d "$SOURCE_DIR" ]; then
+    echo "Error: Source directory '$SOURCE_DIR' does not exist."
+    exit 1
+fi
+
+# Create destination directory
+mkdir -p "$DEST_DIR"
+
+# Debug output
+echo "Searching for widget files in '$SOURCE_DIR'..."
+find "$SOURCE_DIR" -type f -name "*.dart" | wc -l | xargs echo "Found files:"
+
+# Iterate through all Dart files in the source directory
+find "$SOURCE_DIR" -type f -name "*.dart" | while read -r file; do
+    echo "Checking file: $file"
+
+    # Check if the file contains a widget (extends StatelessWidget or StatefulWidget)
+    if is_widget_file "$file"; then
+        # Extract the relative path from the source directory
+        relative_path="${file#"$SOURCE_DIR"/}"
+
+        # Extract the widget class name
+        widget_name=$(extract_widget_name "$file")
+
+        if [ -z "$widget_name" ]; then
+            echo "Warning: Could not extract widget name from $file. Skipping..."
+            continue
+        fi
+
+        echo "Found widget: $widget_name in $file"
+
+        # Create the destination file path in the widgetbook/lib/src directory
+        dest_file="$DEST_DIR/$relative_path"
+
+        # Create the necessary directories in widgetbook if they don't exist
+        echo "Creating directory: $(dirname "$dest_file")"
+        mkdir -p "$(dirname "$dest_file")"
+
+        # Dynamically create the import path
+        import_path="package:$APP_NAME/$relative_path"
+
+        # Write the new file with the Widgetbook UseCase wrapper
+        cat <<EOL > "$dest_file"
+import 'package:flutter/material.dart';
+import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
+
+// Import the widget from your app
+import '$import_path';
+
+@widgetbook.UseCase(name: 'Default', type: $widget_name)
+Widget build${widget_name}UseCase(BuildContext context) {
+  return $widget_name();
+}
+EOL
+
+        echo "Generated story for: $dest_file"
+    else
+        echo "Not a widget file, skipping."
+    fi
+done
+
+# Go back to widgetbook directory to run build_runner
+cd widgetbook
+
+# Step 8: Run build_runner to generate main.directories.g.dart
 echo "Running build_runner to generate main.directories.g.dart..."
-dart run build_runner build -d
+flutter pub get
+dart run build_runner build --delete-conflicting-outputs
 
 echo "Widgetbook setup completed successfully!"
